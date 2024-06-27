@@ -2,11 +2,11 @@ cmake_minimum_required(VERSION 3.0)
 # DO NOT CHANGE THIS SRB2 STRING! Some variable names depend on this string.
 # Version change is fine.
 project(SRB2
-	VERSION 2.1.26
+	VERSION 2.1.25
 	LANGUAGES C)
 
 if(${PROJECT_SOURCE_DIR} MATCHES ${PROJECT_BINARY_DIR})
-	message(FATAL_ERROR "In-source builds will bring you a world of pain. Please make a separate directory to invoke CMake from.")
+	message(FATAL_ERROR "erm please choose a new directory to use CMake")
 endif()
 
 # Set up CMAKE path
