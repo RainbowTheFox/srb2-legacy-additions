@@ -5,5 +5,5 @@ The goal of SRB2 Legacy is to include essential fixes and QOL improvements seen 
 
 
 # SRB2 Legacy Additions  
-* <s>Nothing, yet<s>
+* <s>Nothing, yet</s>
 * Switching renderers ingame, which is technically from the renderswitching branch of legacy but ima put it here because why not 
