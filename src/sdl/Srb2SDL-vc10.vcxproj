@@ -134,6 +134,12 @@
     <_ProjectFileVersion>10.0.30319.1</_ProjectFileVersion>
     <RunCodeAnalysis>false</RunCodeAnalysis>
   </PropertyGroup>
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">
+    <TargetName>srb2legacyadds</TargetName>
+  </PropertyGroup>
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">
+    <TargetName>srb2legacyadds</TargetName>
+  </PropertyGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Debug|ARM'">
     <ClCompile>
       <DebugInformationFormat>ProgramDatabase</DebugInformationFormat>
@@ -295,6 +301,7 @@
     <ClInclude Include="hwsym_sdl.h" />
     <ClInclude Include="i_ttf.h" />
     <ClInclude Include="ogl_sdl.h" />
+    <ClInclude Include="resource.h" />
     <ClInclude Include="sdlmain.h" />
   </ItemGroup>
   <ItemGroup>
@@ -476,6 +483,9 @@
   </ItemGroup>
   <ItemGroup>
     <Image Include="Srb2SDL.ico" />
+  </ItemGroup>
+  <ItemGroup>
+    <ResourceCompile Include="Srb2Win.rc" />
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
   <ImportGroup Label="ExtensionTargets">
