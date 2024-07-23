@@ -2017,6 +2017,12 @@ menu_t *currentMenu = &MainDef;
 // BASIC MENU HANDLING
 // =========================================================================
 
+static void M_UpdateItemOn(void)
+{
+	I_SetTextInputMode((currentMenu->menuitems[itemOn].status & IT_CVARTYPE) == IT_CV_STRING ||
+		(currentMenu->menuitems[itemOn].status & IT_TYPE) == IT_KEYHANDLER);
+}
+
 static void M_ChangeCvar(INT32 choice)
 {
 	consvar_t *cv = (consvar_t *)currentMenu->menuitems[itemOn].itemaction;
@@ -2083,6 +2089,7 @@ static void M_NextOpt(void)
 		else
 			itemOn++;
 	} while (oldItemOn != itemOn && (currentMenu->menuitems[itemOn].status & IT_TYPE) == IT_SPACE);
+	M_UpdateItemOn();
 }
 
 static void M_PrevOpt(void)
@@ -2096,6 +2103,7 @@ static void M_PrevOpt(void)
 		else
 			itemOn--;
 	} while (oldItemOn != itemOn && (currentMenu->menuitems[itemOn].status & IT_TYPE) == IT_SPACE);
+	M_UpdateItemOn();
 }
 
 // lock out further input in a tic when important buttons are pressed
@@ -2131,39 +2139,42 @@ boolean M_Responder(event_t *ev)
 	}
 	else if (menuactive)
 	{
-		if (ev->type == ev_keydown)
+		if (ev->type == ev_keydown || ev->type == ev_text)
 		{
 			ch = ev->data1;
 
-			// added 5-2-98 remap virtual keys (mouse & joystick buttons)
-			switch (ch)
+			if (ev->type == ev_keydown)
 			{
-				case KEY_MOUSE1:
-				case KEY_JOY1:
-					ch = KEY_ENTER;
-					break;
-				case KEY_JOY1 + 3:
-					ch = 'n';
-					break;
-				case KEY_MOUSE1 + 1:
-				case KEY_JOY1 + 1:
-					ch = KEY_ESCAPE;
-					break;
-				case KEY_JOY1 + 2:
-					ch = KEY_BACKSPACE;
-					break;
-				case KEY_HAT1:
-					ch = KEY_UPARROW;
-					break;
-				case KEY_HAT1 + 1:
-					ch = KEY_DOWNARROW;
-					break;
-				case KEY_HAT1 + 2:
-					ch = KEY_LEFTARROW;
-					break;
-				case KEY_HAT1 + 3:
-					ch = KEY_RIGHTARROW;
-					break;
+				// added 5-2-98 remap virtual keys (mouse & joystick buttons)
+				switch (ch)
+				{
+					case KEY_MOUSE1:
+					case KEY_JOY1:
+						ch = KEY_ENTER;
+						break;
+					case KEY_JOY1 + 3:
+						ch = 'n';
+						break;
+					case KEY_MOUSE1 + 1:
+					case KEY_JOY1 + 1:
+						ch = KEY_ESCAPE;
+						break;
+					case KEY_JOY1 + 2:
+						ch = KEY_BACKSPACE;
+						break;
+					case KEY_HAT1:
+						ch = KEY_UPARROW;
+						break;
+					case KEY_HAT1 + 1:
+						ch = KEY_DOWNARROW;
+						break;
+					case KEY_HAT1 + 2:
+						ch = KEY_LEFTARROW;
+						break;
+					case KEY_HAT1 + 3:
+						ch = KEY_RIGHTARROW;
+						break;
+				}
 			}
 		}
 		else if (ev->type == ev_joystick  && ev->data1 == 0 && joywait < I_GetTime())
@@ -2260,6 +2271,7 @@ boolean M_Responder(event_t *ev)
 				M_StartControlPanel();
 				currentMenu = &MISC_HelpDef;
 				itemOn = 0;
+				M_UpdateItemOn();
 				return true;
 
 			case KEY_F2: // Empty
@@ -2276,6 +2288,7 @@ boolean M_Responder(event_t *ev)
 				M_Options(0);
 				currentMenu = &OP_SoundOptionsDef;
 				itemOn = 0;
+				M_UpdateItemOn();
 				return true;
 
 #ifndef DC
@@ -2328,8 +2341,10 @@ boolean M_Responder(event_t *ev)
 	// Handle menuitems which need a specific key handling
 	if (routine && (currentMenu->menuitems[itemOn].status & IT_TYPE) == IT_KEYHANDLER)
 	{
-		if (shiftdown && ch >= 32 && ch <= 127)
-			ch = shiftxform[ch];
+		// ignore ev_keydown events if the key maps to a character, since
+		// the ev_text event will follow immediately after in that case.
+		if (ev->type == ev_keydown && ch >= 32 && ch <= 127)
+			return false;
 		routine(ch);
 		return true;
 	}
@@ -2368,8 +2383,10 @@ boolean M_Responder(event_t *ev)
 	{
 		if ((currentMenu->menuitems[itemOn].status & IT_CVARTYPE) == IT_CV_STRING)
 		{
-			if (shiftdown && ch >= 32 && ch <= 127)
-				ch = shiftxform[ch];
+			// ignore ev_keydown events if the key maps to a character, since
+			// the ev_text event will follow immediately after in that case.
+			if (ev->type == ev_keydown && ch >= 32 && ch <= 127)
+				return true;
 			if (M_ChangeStringCvar(ch))
 				return true;
 			else
@@ -2594,11 +2611,13 @@ void M_StartControlPanel(void)
 
 		currentMenu = &MainDef;
 		itemOn = singleplr;
+		M_UpdateItemOn();
 	}
 	else if (modeattacking)
 	{
 		currentMenu = &MAPauseDef;
 		itemOn = mapause_continue;
+		M_UpdateItemOn();
 	}
 	else if (!(netgame || multiplayer)) // Single Player
 	{
@@ -2643,6 +2662,7 @@ void M_StartControlPanel(void)
 
 		currentMenu = &SPauseDef;
 		itemOn = spause_continue;
+		M_UpdateItemOn();
 	}
 	else // multiplayer
 	{
@@ -2680,6 +2700,7 @@ void M_StartControlPanel(void)
 
 		currentMenu = &MPauseDef;
 		itemOn = mpause_continue;
+		M_UpdateItemOn();
 	}
 
 	//CON_ToggleOff(); // move away console
@@ -2731,6 +2752,7 @@ void M_SetupNextMenu(menu_t *menudef)
 	// in case of...
 	if (itemOn >= currentMenu->numitems)
 		itemOn = currentMenu->numitems - 1;
+	M_UpdateItemOn();
 
 	// the curent item can be disabled,
 	// this code go up until an enabled item found
@@ -2741,6 +2763,7 @@ void M_SetupNextMenu(menu_t *menudef)
 			if ((currentMenu->menuitems[i].status & IT_TYPE) != IT_SPACE)
 			{
 				itemOn = i;
+				M_UpdateItemOn();
 				break;
 			}
 		}
@@ -3812,6 +3835,7 @@ void M_StartMessage(const char *string, void *routine,
 	//M_SetupNextMenu();
 	currentMenu = &MessageDef;
 	itemOn = 0;
+	M_UpdateItemOn();
 }
 
 #define MAXMSGLINELEN 256
@@ -3927,6 +3951,7 @@ static void M_HandleImageDef(INT32 choice)
 			if (itemOn >= (INT16)(currentMenu->numitems-1))
 				itemOn = 0;
             else itemOn++;
+			M_UpdateItemOn();
 			break;
 
 		case KEY_LEFTARROW:
@@ -3937,6 +3962,7 @@ static void M_HandleImageDef(INT32 choice)
 			if (!itemOn)
 				itemOn = currentMenu->numitems - 1;
 			else itemOn--;
+			M_UpdateItemOn();
 			break;
 
 		case KEY_ESCAPE:
@@ -4733,6 +4759,7 @@ static void M_EmblemHints(INT32 choice)
 	SR_EmblemHintMenu[0].status = (M_SecretUnlocked(SECRET_ITEMFINDER)) ? (IT_CVAR|IT_STRING) : (IT_SECRET);
 	M_SetupNextMenu(&SR_EmblemHintDef);
 	itemOn = 1; // always start on back.
+	M_UpdateItemOn();
 }
 
 static void M_DrawEmblemHints(void)
@@ -6078,6 +6105,7 @@ static void M_TimeAttack(INT32 choice)
 	Nextmap_OnChange();
 
 	itemOn = tastart; // "Start" is selected.
+	M_UpdateItemOn();
 
 	G_SetGamestate(GS_TIMEATTACK);
 	S_ChangeMusicInternal("racent", true);
@@ -6211,6 +6239,7 @@ static void M_NightsAttack(INT32 choice)
 	Nextmap_OnChange();
 
 	itemOn = nastart; // "Start" is selected.
+	M_UpdateItemOn();
 
 	G_SetGamestate(GS_TIMEATTACK);
 	S_ChangeMusicInternal("racent", true);
@@ -6445,6 +6474,7 @@ static void M_ModeAttackEndGame(INT32 choice)
 		break;
 	}
 	itemOn = currentMenu->lastOn;
+	M_UpdateItemOn();
 	G_SetGamestate(GS_TIMEATTACK);
 	modeattacking = ATTACKING_NONE;
 	S_ChangeMusicInternal("racent", true);
@@ -6752,6 +6782,7 @@ static void M_ConnectMenu(INT32 choice)
 	serverlistpage = 0;
 	M_SetupNextMenu(&MP_ConnectDef);
 	itemOn = 0;
+	M_UpdateItemOn();
 	M_Refresh(0);
 }
 
