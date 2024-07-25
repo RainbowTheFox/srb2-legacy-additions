@@ -20,7 +20,7 @@ jobs:
        run: sudo apt-get update 
 
      - name: Installing Toolchain
-       run: sudo apt-get install -y mingw-w64 nasm
+       run: sudo apt-get install -y mingw-w64 binutils-mingw-w64 nasm
 
      - name: Build SRB2
        run: make -C src/ --keep-going MINGW=1 SDL=1 -j3 
