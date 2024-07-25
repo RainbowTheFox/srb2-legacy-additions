@@ -12,16 +12,19 @@ env:
 
 jobs:
    build:
-    runs-on: ubuntu-latest
+    runs-on: windows-latest
     steps: 
-     - uses: actions/checkout@v4
+     - uses: actions/checkout@v4  
+     - name: Setup Environment
+     - uses: msys2/setup-msys2@v2
+       with: 
+        msystem: MINGW32
+        install: >- 
+         git 
+         make
+         mingw-w64-i686-gcc
 
-     - name: Update package list
-       run: sudo apt-get update 
-
-     - name: Installing Toolchain
-       run: sudo apt-get install -y mingw-w64 binutils-mingw-w64 nasm && alias windres='i686-w64-mingw32-windres'
-
+     
      - name: Build SRB2
        run: make -C src/ --keep-going MINGW=1 SDL=1 -j3 
 
