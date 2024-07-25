@@ -16,7 +16,7 @@ jobs:
     steps: 
      - uses: actions/checkout@v4  
      - name: Setup Environment
-     - uses: msys2/setup-msys2@v2
+       uses: msys2/setup-msys2@v2
        with: 
         msystem: MINGW32
         install: >- 
