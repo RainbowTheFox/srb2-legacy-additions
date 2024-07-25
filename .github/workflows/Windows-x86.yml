@@ -7,8 +7,7 @@ on:
     branches: [ "master" ]
 
 env:
-  CC:  i686-w64-mingw32-gcc 
-  WINDRES: i686-w64-mingw32-windres
+  CC: gcc
 
 jobs:
    build:
